@@ -22,7 +22,7 @@ async def send_message_to_whitelisted_users(message):
     USER_IDS = get_whitelist()
     for user_id in USER_IDS:
         print(f'Sending to {user_id}')
-        await bot.send_message(chat_id=user_id, text=message)
+        await bot.send_message(chat_id=user_id, text=message, parse_mode='MarkdownV2')
 
 # Endpoint to trigger bot command
 @app.post("/trigger_bot_command")
