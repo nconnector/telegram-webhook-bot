@@ -4,6 +4,8 @@ import telegram
 from dotenv import load_dotenv
 import os
 import asyncio
+import json
+from typing import Union
 
 from utills import get_whitelist, start_ngrok, stop_ngrok, get_local_ip
 
@@ -15,14 +17,39 @@ bot = telegram.Bot(token=os.getenv("TELEGRAM_API_KEY"))
 app = FastAPI()
 
 class MessagePayload(BaseModel):
-    message: str
+    message: Union[str, dict, list]
 
 # Function to send messages to whitelisted users
 async def send_message_to_whitelisted_users(message):
+    if isinstance(message, str):
+        formatted_message = message.translate(str.maketrans({
+            "_": "\\_",
+            "*": "\\*",
+            "[": "\\[",
+            "]": "\\]",
+            "(": "\\(",
+            ")": "\\)",
+            "~": "\\~",
+            ">": "\\>",
+            "#": "\\#",
+            "+": "\\+",
+            "-": "\\-",
+            "=": "\\=",
+            "|": "\\|",
+            "{": "\\{",
+            "}": "\\}",
+            ".": "\\.",
+            "!": "\\!"
+        }))
+    else:
+        message = json.dumps(message, indent=4)
+        formatted_message = f"```\n{message}\n```"
+
+
     USER_IDS = get_whitelist()
     for user_id in USER_IDS:
         print(f'Sending to {user_id}')
-        await bot.send_message(chat_id=user_id, text=message, parse_mode='MarkdownV2')
+        await bot.send_message(chat_id=user_id, text=formatted_message, parse_mode='MarkdownV2')
 
 # Endpoint to trigger bot command
 @app.post("/trigger_bot_command")
